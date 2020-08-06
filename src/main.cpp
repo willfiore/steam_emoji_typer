@@ -114,7 +114,6 @@ LRESULT CALLBACK KeyboardHookProc(const int code, const WPARAM wParam, const LPA
 		AppendChar(&inputs, ':');
 
 		SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
-		Sleep(10);
 
 		return 1;
 	}
