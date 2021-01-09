@@ -1,4 +1,4 @@
-#include <iostream>
+#include <array>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -75,6 +75,28 @@ void AppendChar(std::vector<INPUT>* inputs, char c) {
 	}
 }
 
+void SendSpace() {
+
+	std::array<INPUT, 2> inputs;
+
+	{
+        INPUT input = {};
+        input.type = INPUT_KEYBOARD;
+        input.ki.dwExtraInfo = KEYBOARD_EVENT_TAG;
+
+        input.ki.wVk = 0;
+        input.ki.dwFlags = KEYEVENTF_UNICODE;
+        input.ki.wScan = 0x2001; // EM QUAD, FAT BOI WHITESPACE
+
+        inputs[0] = input;
+
+        input.ki.dwFlags |= KEYEVENTF_KEYUP;
+        inputs[1] = input;
+	}
+
+	SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+}
+
 LRESULT CALLBACK KeyboardHookProc(const int code, const WPARAM wParam, const LPARAM lParam) {
 
 	if (wParam == WM_KEYDOWN) {
@@ -92,10 +114,17 @@ LRESULT CALLBACK KeyboardHookProc(const int code, const WPARAM wParam, const LPA
 
 		if (data->vkCode == VK_F8 && ctrl) {
 			enabled = !enabled;
+			return CallNextHookEx(h_hook, code, wParam, lParam);
 		}
 
 		if (!enabled) {
 			return CallNextHookEx(h_hook, code, wParam, lParam);
+		}
+
+		// special handling for space character
+		if (data->vkCode == 32) {
+			SendSpace();
+			return 1;
 		}
 
 		if (data->vkCode < 65 || data->vkCode > 90 || modifiers) {
